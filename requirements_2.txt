@@ -1,1 +1,4 @@
-# Placeholder for requirements_2.txt
+streamlit
+pandas
+openpyxl
+xlsxwriter
