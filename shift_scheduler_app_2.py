@@ -16,8 +16,10 @@ months = [
 
 # Allow user to pick any month/year from 2025 to 2030
 st.sidebar.header("Calendar Settings")
-year = int(st.selectbox("Select Year", options=years))
-month = int(months.index(st.selectbox("Select Month", options=months)) + 1)
+selected_year = st.selectbox("Select Year", options=years)
+selected_month_name = st.selectbox("Select Month", options=months)
+year = int(selected_year)
+month = int(months.index(selected_month_name)) + 1
 
 names = ["Brandon", "Tony", "Erik"]
 
