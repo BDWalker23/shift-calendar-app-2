@@ -16,41 +16,68 @@ def get_color(name):
         return "FFFFFF"  # Default white
 
 def autopopulate_schedule(year, month, existing_schedule):
+    from collections import Counter
+    from datetime import date
+    import calendar
+    import random
+
     all_names = ["Brandon", "Tony", "Erik"]
     schedule = existing_schedule.copy()
-
     cal = calendar.Calendar(firstweekday=6)
-    all_days = [d for week in cal.monthdatescalendar(year, month) for d in week if d.month == month]
 
-    # Step 1: Find all possible Friday-Saturday-Sunday combos
+    # 1. Get all valid days in the month
+    all_days = [day for week in cal.monthdatescalendar(year, month) for day in week if day.month == month]
+
+    # 2. Lock in manually selected OFF days
+    locked_days = set(schedule.keys())
+
+    # 3. Assign one full Fri–Sat–Sun OFF block to each person
     weekends = []
-    for i in range(len(all_days) - 2):
-        if all_days[i].weekday() == 4 and all_days[i+1].weekday() == 5 and all_days[i+2].weekday() == 6:
-            weekends.append((all_days[i], all_days[i+1], all_days[i+2]))
+    for week in cal.monthdatescalendar(year, month):
+        fri = week[calendar.FRIDAY]
+        sat = week[calendar.SATURDAY]
+        sun = week[calendar.SUNDAY]
+        if all(d.month == month for d in [fri, sat, sun]):
+            weekends.append((fri, sat, sun))
 
-    # Step 2: Assign each person to one unused weekend
-    used_days = set(schedule.keys())
-    assigned_weekends = set()
+    used_weekends = set()
+    assigned_weekend_names = set()
 
-    for name in all_names:
-        for fri, sat, sun in weekends:
-            if fri not in used_days and sat not in used_days and sun not in used_days:
-                schedule[fri] = name
-                schedule[sat] = name
-                schedule[sun] = name
-                used_days.update([fri, sat, sun])
-                assigned_weekends.add((fri, sat, sun))
-                break
+    for fri, sat, sun in weekends:
+        available_names = [name for name in all_names if name not in assigned_weekend_names]
+        if not available_names:
+            break
+        chosen = available_names[0]
 
-    # Step 3: Fill remaining unassigned days, balancing counts
+        # Only assign if all 3 days are unassigned
+        if all(d not in locked_days for d in [fri, sat, sun]):
+            schedule[fri] = chosen
+            schedule[sat] = chosen
+            schedule[sun] = chosen
+            assigned_weekend_names.add(chosen)
+            used_weekends.add((fri, sat, sun))
+            locked_days.update([fri, sat, sun])
+
+    # 4. Fill remaining unassigned days
     off_count = Counter(schedule.values())
+    unfilled = [d for d in all_days if d not in schedule]
 
-    for day in all_days:
-        if day not in schedule:
-            # Choose the name with the fewest OFF days so far
-            least = min(all_names, key=lambda n: off_count[n])
-            schedule[day] = least
-            off_count[least] += 1
+    # Calculate target OFF days per person (balanced ±1)
+    base_off = len(all_days) // len(all_names)
+    extras = len(all_days) % len(all_names)
+    target_off = {name: base_off for name in all_names}
+    for i in range(extras):
+        target_off[all_names[i]] += 1
+
+    # Assign remaining OFF days based on current count
+    random.shuffle(unfilled)
+    for day in unfilled:
+        sorted_names = sorted(all_names, key=lambda n: off_count[n])
+        for name in sorted_names:
+            if off_count[name] < target_off[name]:
+                schedule[day] = name
+                off_count[name] += 1
+                break
 
     return schedule
 def generate_excel_calendar(year, month, schedule, file_path):
