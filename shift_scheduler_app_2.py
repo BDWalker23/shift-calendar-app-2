@@ -94,10 +94,10 @@ if st.button("📥 Generate Calendar"):
             schedule = evenly_distribute(schedule, month_range)
 
         output_path = "/tmp/shift_calendar.xlsx"
-generate_excel_calendar(selected_year, list(calendar.month_name).index(selected_month), schedule, output_path)
+        generate_excel_calendar(selected_year, list(calendar.month_name).index(selected_month), schedule, output_path)
 
-with open(output_path, "rb") as f:
-    excel_bytes = f.read()
+        with open(output_path, "rb") as f:
+            excel_bytes = f.read()
 
         st.success("✅ Excel calendar generated!")
         st.download_button(
