@@ -3,7 +3,7 @@ from datetime import date
 from collections import defaultdict
 import calendar
 import random
-from calendar_excel_generator import generate_excel_calendar
+from calendar_excel_generator import generate_excel_calendar, autopopulate_schedule
 
 st.set_page_config(layout="wide")
 
