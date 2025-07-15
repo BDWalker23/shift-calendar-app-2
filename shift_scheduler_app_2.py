@@ -50,10 +50,9 @@ for week in weeks:
 # Generate calendar-style PDF
 if st.button("Generate PDF"):
     try:
-        # Use autopopulate function to ensure it's complete and balanced
         from autopopulate_schedule_2 import autopopulate_schedule  # make sure this file is also in your repo
 
-       full_schedule = autopopulate_schedule(year, month, schedule)
+        full_schedule = autopopulate_schedule(year, month, schedule)
 
         pdf = CalendarPDF()
         pdf.draw_calendar(year, month, full_schedule)
