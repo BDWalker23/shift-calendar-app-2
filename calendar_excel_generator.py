@@ -4,6 +4,7 @@ from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Alignment, Font
 from collections import Counter
 from openpyxl.utils import get_column_letter
+from openpyxl.styles.borders import Border, Side
 import random
 
 def get_color(name):
@@ -97,9 +98,14 @@ def generate_excel_calendar(year, month, schedule, file_path):
 
                 cell.value = cell_value
                 cell.alignment = Alignment(wrap_text=True, vertical="top")
-                if off_name:
-                    fill_color = get_color(off_name)
-                    cell.fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
+
+                # Add top and bottom borders
+                thin_border = Border(top=Side(style="thin"), bottom=Side(style="thin"))
+                cell.border = thin_border
+
+if off_name:
+    fill_color = get_color(off_name)
+    cell.fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
 
                 cell.font = Font(bold=False)
                 cell_value_lines = cell_value.split("\n")
