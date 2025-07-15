@@ -53,12 +53,12 @@ if st.button("Generate PDF"):
         # Use autopopulate function to ensure it's complete and balanced
         from autopopulate_schedule_2 import autopopulate_schedule  # make sure this file is also in your repo
 
-        full_schedule = autopopulate_schedule(selected_year, selected_month, schedule)
+       full_schedule = autopopulate_schedule(year, month, schedule)
 
         pdf = CalendarPDF()
-        pdf.draw_calendar(selected_year, selected_month, full_schedule)
+        pdf.draw_calendar(year, month, full_schedule)
 
-        output_filename = f"shift_calendar_{calendar.month_name[selected_month].lower()}_{selected_year}_v2.pdf"
+        output_filename = f"shift_calendar_{calendar.month_name[month].lower()}_{year}_v2.pdf"
         pdf.output(output_filename)
 
         with open(output_filename, "rb") as f:
