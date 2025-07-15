@@ -16,51 +16,73 @@ def get_color(name):
         return "FFFFFF"
 
 def autopopulate_schedule(year, month, existing_schedule):
+    from collections import Counter
+    import calendar
+    import random
+
     all_names = ["Brandon", "Tony", "Erik"]
     schedule = existing_schedule.copy()
     cal = calendar.Calendar(firstweekday=6)
+
+    # Get all valid days in the month
     all_days = [day for week in cal.monthdatescalendar(year, month) for day in week if day.month == month]
+
+    # Lock in manually selected OFF days
     locked_days = set(schedule.keys())
+    weekend_blocks = []
 
-    # Step 1: Assign 1 full weekend OFF to each person (Fri/Sat/Sun)
-    weekends = []
     for week in cal.monthdatescalendar(year, month):
-        fri, sat, sun = week[calendar.FRIDAY], week[calendar.SATURDAY], week[calendar.SUNDAY]
-        if all(d.month == month and d not in locked_days for d in [fri, sat, sun]):
-            weekends.append((fri, sat, sun))
+        fri = week[calendar.FRIDAY]
+        sat = week[calendar.SATURDAY]
+        sun = week[calendar.SUNDAY]
+        if all(d.month == month for d in [fri, sat, sun]):
+            weekend_blocks.append((fri, sat, sun))
 
-    used_days = set()
-    used_names = set()
-    for fri, sat, sun in weekends:
-        available = [n for n in all_names if n not in used_names]
-        if not available:
-            break
-        pick = available[0]
-        schedule[fri] = pick
-        schedule[sat] = pick
-        schedule[sun] = pick
-        used_names.add(pick)
-        used_days.update([fri, sat, sun])
+    assigned_weekend_names = set()
 
-    locked_days.update(used_days)
+    # If someone selected only 1–2 days of a weekend, treat it as their full weekend off
+    for name in all_names:
+        for fri, sat, sun in weekend_blocks:
+            selected_days = [d for d in [fri, sat, sun] if schedule.get(d) == name]
+            if len(selected_days) >= 1 and len(selected_days) < 3:
+                for d in [fri, sat, sun]:
+                    if d not in locked_days:
+                        schedule[d] = name
+                        locked_days.add(d)
+                assigned_weekend_names.add(name)
+                break
 
-    # Step 2: Fill in rest of unassigned OFF days evenly
-    unfilled = [d for d in all_days if d not in schedule]
+    # Now try to give remaining names one full weekend off
+    for name in all_names:
+        if name in assigned_weekend_names:
+            continue
+        for fri, sat, sun in weekend_blocks:
+            if all(d not in locked_days for d in [fri, sat, sun]):
+                schedule[fri] = name
+                schedule[sat] = name
+                schedule[sun] = name
+                locked_days.update([fri, sat, sun])
+                assigned_weekend_names.add(name)
+                break
+
+    # Fill remaining unassigned days
     off_count = Counter(schedule.values())
+    unfilled = [d for d in all_days if d not in schedule]
 
-    base = len(all_days) // len(all_names)
+    # Calculate target OFF days per person (balanced ±1)
+    base_off = len(all_days) // len(all_names)
     extras = len(all_days) % len(all_names)
-    targets = {n: base for n in all_names}
+    target_off = {name: base_off for name in all_names}
     for i in range(extras):
-        targets[all_names[i]] += 1
+        target_off[all_names[i]] += 1
 
     random.shuffle(unfilled)
-    for d in unfilled:
+    for day in unfilled:
         sorted_names = sorted(all_names, key=lambda n: off_count[n])
-        for n in sorted_names:
-            if off_count[n] < targets[n]:
-                schedule[d] = n
-                off_count[n] += 1
+        for name in sorted_names:
+            if off_count[name] < target_off[name]:
+                schedule[day] = name
+                off_count[name] += 1
                 break
 
     return schedule
