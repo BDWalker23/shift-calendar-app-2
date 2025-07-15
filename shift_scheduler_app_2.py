@@ -41,18 +41,29 @@ def evenly_distribute(schedule, days_in_month):
 def assign_weekend(schedule, year, month):
     weekends_given = {name: False for name in names}
     cal = calendar.Calendar()
-    for week in calendar.monthcalendar(year, month):
-        fri, sat, sun = week[calendar.FRIDAY], week[calendar.SATURDAY], week[calendar.SUNDAY]
-        if fri and sat and sun:
-            available = [n for n, v in weekends_given.items() if not v]
-            if available:
-                chosen = available[0]
-                for d in [fri, sat, sun]:
-                    try:
-                        schedule[date(year, month, d)] = chosen
-                    except:
-                        continue
-                weekends_given[chosen] = True
+    month_days = list(cal.itermonthdates(year, month))
+
+    # Group weekends (Fri-Sun)
+    weekend_blocks = []
+    for i in range(len(month_days) - 2):
+        if (month_days[i].weekday() == 4 and
+            month_days[i+1].weekday() == 5 and
+            month_days[i+2].weekday() == 6 and
+            month_days[i].month == month and
+            month_days[i+1].month == month and
+            month_days[i+2].month == month):
+            weekend_blocks.append((month_days[i], month_days[i+1], month_days[i+2]))
+
+    # Try to assign a full weekend to each person
+    for name in names:
+        for fri, sat, sun in weekend_blocks:
+            if all(schedule.get(d, "") != name for d in [fri, sat, sun]):
+                schedule[fri] = name
+                schedule[sat] = name
+                schedule[sun] = name
+                weekends_given[name] = True
+                break
+
     return schedule
 
 st.markdown("### Select OFF days for each person")
