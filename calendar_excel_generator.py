@@ -20,31 +20,32 @@ def autopopulate_schedule(year, month, existing_schedule):
     schedule = existing_schedule.copy()
     cal = calendar.Calendar(firstweekday=6)
 
-    # Step 1: Identify all valid dates in the month
     all_days = [day for week in cal.monthdatescalendar(year, month) for day in week if day.month == month]
     locked_days = set(schedule.keys())
 
-    # Step 2: Assign one full weekend (Fri–Sat–Sun) to each person, only if not already locked
-    weekends = []
+    # Step 1 – Assign full Fri-Sat-Sun weekend OFF per person
+    weekend_blocks = []
     for week in cal.monthdatescalendar(year, month):
         fri, sat, sun = week[calendar.FRIDAY], week[calendar.SATURDAY], week[calendar.SUNDAY]
         if all(d.month == month for d in [fri, sat, sun]):
-            weekends.append((fri, sat, sun))
+            weekend_blocks.append((fri, sat, sun))
 
-    assigned = set()
-    for fri, sat, sun in weekends:
-        for name in all_names:
-            if name not in assigned and all(d not in locked_days for d in [fri, sat, sun]):
-                schedule[fri] = name
-                schedule[sat] = name
-                schedule[sun] = name
-                locked_days.update([fri, sat, sun])
-                assigned.add(name)
-                break
+    random.shuffle(weekend_blocks)
+    assigned_weekends = set()
+    for name in all_names:
+        for fri, sat, sun in weekend_blocks:
+            if (fri, sat, sun) not in assigned_weekends:
+                if all(d not in locked_days for d in [fri, sat, sun]):
+                    schedule[fri] = name
+                    schedule[sat] = name
+                    schedule[sun] = name
+                    locked_days.update([fri, sat, sun])
+                    assigned_weekends.add((fri, sat, sun))
+                    break
 
-    # Step 3: Evenly distribute remaining unassigned OFF days (±1)
-    unfilled = [d for d in all_days if d not in schedule]
+    # Step 2 – Evenly distribute remaining OFF days (±1)
     off_count = Counter(schedule.values())
+    unfilled = [d for d in all_days if d not in schedule]
 
     base = len(all_days) // len(all_names)
     extras = len(all_days) % len(all_names)
@@ -53,11 +54,11 @@ def autopopulate_schedule(year, month, existing_schedule):
         target[all_names[i]] += 1
 
     random.shuffle(unfilled)
-    for d in unfilled:
+    for day in unfilled:
         sorted_names = sorted(all_names, key=lambda n: off_count[n])
         for name in sorted_names:
             if off_count[name] < target[name]:
-                schedule[d] = name
+                schedule[day] = name
                 off_count[name] += 1
                 break
 
