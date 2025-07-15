@@ -25,53 +25,50 @@ def autopopulate_schedule(year, month, existing_schedule):
     schedule = existing_schedule.copy()
     cal = calendar.Calendar(firstweekday=6)
 
-    # 1. Get all valid days in the month
+    # Get all valid days
     all_days = [day for week in cal.monthdatescalendar(year, month) for day in week if day.month == month]
-
-    # 2. Lock in manually selected OFF days
     locked_days = set(schedule.keys())
 
-    # 3. Assign one full Fri–Sat–Sun OFF block to each person
+    # Assign one full weekend (Fri–Sat–Sun) OFF to each person
     weekends = []
     for week in cal.monthdatescalendar(year, month):
-        fri = week[calendar.FRIDAY]
-        sat = week[calendar.SATURDAY]
-        sun = week[calendar.SUNDAY]
-        if all(d.month == month and d not in locked_days for d in [fri, sat, sun]):
+        fri, sat, sun = week[calendar.FRIDAY], week[calendar.SATURDAY], week[calendar.SUNDAY]
+        if all(d.month == month for d in [fri, sat, sun]):
             weekends.append((fri, sat, sun))
 
+    random.shuffle(weekends)
     used_days = set()
-    assigned = {}
+    assigned_people = set()
 
-    for name in all_names:
-        for fri, sat, sun in weekends:
-            if not any(d in used_days or d in locked_days for d in [fri, sat, sun]):
-                schedule[fri] = name
-                schedule[sat] = name
-                schedule[sun] = name
-                used_days.update([fri, sat, sun])
-                assigned[name] = (fri, sat, sun)
-                break
+    for fri, sat, sun in weekends:
+        if any(d in locked_days or d in used_days for d in [fri, sat, sun]):
+            continue
+        remaining = [n for n in all_names if n not in assigned_people]
+        if not remaining:
+            break
+        person = remaining[0]
+        schedule[fri] = person
+        schedule[sat] = person
+        schedule[sun] = person
+        assigned_people.add(person)
+        used_days.update([fri, sat, sun])
+        locked_days.update([fri, sat, sun])
 
-    locked_days.update(used_days)
-
-    # 4. Fill remaining unassigned days
-    off_count = Counter(schedule.values())
+    # Assign remaining OFF days evenly
     unfilled = [d for d in all_days if d not in schedule]
+    off_count = Counter(schedule.values())
 
-    # Calculate target OFF days per person (balanced ±1)
-    base_off = len(all_days) // len(all_names)
-    extras = len(all_days) % len(all_names)
-    target_off = {name: base_off for name in all_names}
-    for i in range(extras):
-        target_off[all_names[i]] += 1
+    base = len(all_days) // len(all_names)
+    remainder = len(all_days) % len(all_names)
+    targets = {n: base for n in all_names}
+    for i in range(remainder):
+        targets[all_names[i]] += 1
 
-    # Assign remaining OFF days based on current count
     random.shuffle(unfilled)
     for day in unfilled:
-        sorted_names = sorted(all_names, key=lambda n: off_count[n])
-        for name in sorted_names:
-            if off_count[name] < target_off[name]:
+        eligible = sorted(all_names, key=lambda n: off_count[n])
+        for name in eligible:
+            if off_count[name] < targets[name]:
                 schedule[day] = name
                 off_count[name] += 1
                 break
