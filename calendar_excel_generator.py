@@ -8,6 +8,16 @@ from collections import Counter
 import random
 from datetime import timedelta
 
+def get_color(name):
+    if name == "Brandon":
+        return "FFFF99"  # Yellow
+    elif name == "Tony":
+        return "CCFFCC"  # Green
+    elif name == "Erik":
+        return "99CCFF"  # Blue
+    else:
+        return "FFFFFF"  # Default white
+
 def generate_excel_calendar(year, month, schedule, file_path):
     wb = Workbook()
     ws = wb.active
