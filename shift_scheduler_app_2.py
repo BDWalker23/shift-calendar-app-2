@@ -83,22 +83,18 @@ assign_weekend_pref = st.checkbox("✅ Ensure everyone gets one weekend OFF")
 
 if st.button("📥 Generate Calendar"):
     try:
-        all_days = [date(selected_year, list(calendar.month_name).index(selected_month), d)
-                    for d in range(1, month_range + 1)]
-
-        unfilled = [d for d in all_days if d not in schedule]
-
-        for d in unfilled:
-            schedule[d] = random.choice(names)
-
-        if assign_weekend_pref:
-            schedule = assign_weekend(schedule, selected_year, list(calendar.month_name).index(selected_month))
-
-        if even:
-            schedule = evenly_distribute(schedule, month_range)
-
         output_path = f"/tmp/{selected_month}_{selected_year}_calendar.xlsx"
-        generate_excel_calendar(selected_year, list(calendar.month_name).index(selected_month), schedule, output_path)
+        final_schedule = autopopulate_schedule(
+            selected_year,
+            list(calendar.month_name).index(selected_month),
+            dict(schedule)
+        )
+        generate_excel_calendar(
+            selected_year,
+            list(calendar.month_name).index(selected_month),
+            final_schedule,
+            output_path
+        )
 
         with open(output_path, "rb") as f:
             st.success("✅ Excel calendar generated!")
