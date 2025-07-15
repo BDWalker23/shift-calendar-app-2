@@ -107,7 +107,6 @@ def generate_excel_calendar(year, month, schedule, file_path):
                     day_str = cell_value_lines[0]
                     cell.value = f"{day_str}\n" + "\n".join(cell_value_lines[1:])
 
-from openpyxl.utils import get_column_letter
 
     for i in range(1, 8):  # Columns A–G (7 days)
         col_letter = get_column_letter(i)
