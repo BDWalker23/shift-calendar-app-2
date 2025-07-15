@@ -43,21 +43,19 @@ def assign_weekend(schedule, year, month):
     cal = calendar.Calendar()
     month_days = list(cal.itermonthdates(year, month))
 
-    # Group weekends (Fri-Sun)
+    # Build list of valid Fri–Sat–Sun weekend blocks
     weekend_blocks = []
     for i in range(len(month_days) - 2):
-        if (month_days[i].weekday() == 4 and
-            month_days[i+1].weekday() == 5 and
-            month_days[i+2].weekday() == 6 and
-            month_days[i].month == month and
-            month_days[i+1].month == month and
-            month_days[i+2].month == month):
-            weekend_blocks.append((month_days[i], month_days[i+1], month_days[i+2]))
+        fri, sat, sun = month_days[i:i+3]
+        if (fri.weekday() == 4 and sat.weekday() == 5 and sun.weekday() == 6 and
+            fri.month == month and sat.month == month and sun.month == month):
+            weekend_blocks.append((fri, sat, sun))
 
-    # Try to assign a full weekend to each person
+    # Assign one full weekend OFF per person
     for name in names:
         for fri, sat, sun in weekend_blocks:
-            if all(schedule.get(d, "") != name for d in [fri, sat, sun]):
+            # Only assign if all 3 days are unassigned
+            if all(d not in schedule for d in [fri, sat, sun]):
                 schedule[fri] = name
                 schedule[sat] = name
                 schedule[sun] = name
