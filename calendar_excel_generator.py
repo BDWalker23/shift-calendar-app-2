@@ -69,7 +69,7 @@ def autopopulate_schedule(year, month, existing_schedule):
 def generate_excel_calendar(year, month, schedule, file_path):
     wb = Workbook()
     ws = wb.active
-    ws.title = f"{calendar.month_name[month]} {year}"
+    ws.title = f"{calendar.month_name[month]} {year} Shift Calendar – N969PW"
 
     # Add Month and Year title
     title = f"{calendar.month_name[month]} {year} Shift Calendar"
