@@ -62,7 +62,7 @@ def generate_excel(schedule, month, year):
                 on_names = [n for n in names if n != off_name]
                 cell_value = f"{day.day}"
                 if off_name:
-                    cell_value += f"
+                    cell_value += f"{day.day}\n{name} OFF\n{on_names} ON"
 {off_name} OFF
 {on_names[0]} & {on_names[1]} ON"
                 cell.value = cell_value
