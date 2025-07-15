@@ -3,6 +3,7 @@ import streamlit as st
 import calendar
 from datetime import date, datetime, timedelta
 from calendar_pdf_2 import CalendarPDF, get_color
+from autopopulate_schedule_2 import autopopulate_schedule
 
 st.set_page_config(layout="wide")
 st.title("Shift Calendar App v2")
@@ -46,10 +47,20 @@ for week in weeks:
 
 # Generate calendar-style PDF
 if st.button("Generate PDF"):
-    pdf = CalendarPDF(orientation="L", unit="mm", format="A4")
-    pdf.add_page()
-    pdf.draw_calendar(year, month, shift_data)
-    filename = f"shift_calendar_{calendar.month_name[month].lower()}_{year}_v2.pdf"
-    pdf.output(filename)
-    with open(filename, "rb") as f:
-        st.download_button("📥 Download Calendar PDF", f, file_name=filename)
+    try:
+        # Use autopopulate function to ensure it's complete and balanced
+        from autopopulate_schedule_2 import autopopulate_schedule  # make sure this file is also in your repo
+
+        full_schedule = autopopulate_schedule(selected_year, selected_month, schedule)
+
+        pdf = CalendarPDF()
+        pdf.draw_calendar(selected_year, selected_month, full_schedule)
+
+        output_filename = f"shift_calendar_{calendar.month_name[selected_month].lower()}_{selected_year}_v2.pdf"
+        pdf.output(output_filename)
+
+        with open(output_filename, "rb") as f:
+            st.download_button("Download PDF", f, file_name=output_filename)
+
+    except Exception as e:
+        st.error(f"Error generating PDF: {e}")
