@@ -4,6 +4,8 @@ import calendar
 from datetime import date, datetime, timedelta
 from calendar_pdf_2 import CalendarPDF, get_color
 from autopopulate_schedule_2 import autopopulate_schedule
+from collections import Counter
+import random
 
 st.set_page_config(layout="wide")
 st.title("Shift Calendar App v2")
