@@ -116,5 +116,9 @@ def generate_excel_calendar(year, month, schedule, file_path):
                     if cell_value_lines:
                         day_str = cell_value_lines[0]
                         cell.value = f"{day_str}\n" + "\n".join(cell_value_lines[1:])
-
+                        
+    # Set column widths for better layout
+    for col in ws.columns:
+        col_letter = col[0].column_letter
+        ws.column_dimensions[col_letter].width = 25  # adjust to 28 if you want even wider
     wb.save(file_path)
