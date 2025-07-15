@@ -1,5 +1,12 @@
-from openpyxl.utils import get_column_letter
+import calendar
+from datetime import date
+from openpyxl import Workbook
+from openpyxl.styles import PatternFill, Alignment, Font
 from openpyxl.styles.borders import Border, Side
+from openpyxl.utils import get_column_letter
+from collections import Counter
+import random
+from datetime import timedelta
 
 def generate_excel_calendar(year, month, schedule, file_path):
     wb = Workbook()
