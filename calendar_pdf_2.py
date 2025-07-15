@@ -29,7 +29,7 @@ class CalendarPDF(FPDF):
         # Weekday headers
         self.set_font("Arial", "B", 10)
         cell_width = 40
-        cell_height = 20
+        cell_height = 60
         days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
         for day in days:
             self.cell(cell_width, 10, day, border=1, align="C")
