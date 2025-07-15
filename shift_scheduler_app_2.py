@@ -7,6 +7,8 @@ from calendar_pdf_2 import CalendarPDF, get_color
 st.set_page_config(layout="wide")
 st.title("Shift Calendar App v2")
 
+years = list(range(2025, 2031))
+
 # Allow user to pick any month/year from 2025 to 2030
 st.sidebar.header("Calendar Settings")
 year = int(st.selectbox("Select Year", options=years))
