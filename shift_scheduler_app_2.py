@@ -7,7 +7,7 @@ from calendar_excel_generator import generate_excel_calendar
 
 st.set_page_config(layout="wide")
 
-st.title("📆 Shift Scheduler (Version 2)")
+st.title("📆 Shift Scheduler (Version 2) – N969PW")
 
 names = ["Brandon", "Tony", "Erik"]
 today = date.today()
@@ -41,17 +41,12 @@ def evenly_distribute(schedule, days_in_month):
 def assign_weekend(schedule, year, month):
     weekends_given = {name: False for name in names}
     cal = calendar.Calendar()
-    month_days = cal.itermonthdates(year, month)
-
     for week in calendar.monthcalendar(year, month):
-        fri = week[calendar.FRIDAY]
-        sat = week[calendar.SATURDAY]
-        sun = week[calendar.SUNDAY]
-
+        fri, sat, sun = week[calendar.FRIDAY], week[calendar.SATURDAY], week[calendar.SUNDAY]
         if fri and sat and sun:
-            available_names = [name for name, given in weekends_given.items() if not given]
-            if available_names:
-                chosen = available_names[0]
+            available = [n for n, v in weekends_given.items() if not v]
+            if available:
+                chosen = available[0]
                 for d in [fri, sat, sun]:
                     try:
                         schedule[date(year, month, d)] = chosen
@@ -93,18 +88,16 @@ if st.button("📥 Generate Calendar"):
         if even:
             schedule = evenly_distribute(schedule, month_range)
 
-        output_path = "/tmp/shift_calendar.xlsx"
+        output_path = f"/tmp/{selected_month}_{selected_year}_calendar.xlsx"
         generate_excel_calendar(selected_year, list(calendar.month_name).index(selected_month), schedule, output_path)
 
         with open(output_path, "rb") as f:
-            excel_bytes = f.read()
-
-        st.success("✅ Excel calendar generated!")
-        st.download_button(
-            label="📥 Download Excel Calendar",
-            data=excel_bytes,
-            file_name=f"{selected_month}_{selected_year}_Shift_Calendar.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
+            st.success("✅ Excel calendar generated!")
+            st.download_button(
+                label="📥 Download Excel Calendar",
+                data=f,
+                file_name=f"{selected_month}_{selected_year}_Shift_Calendar.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
     except Exception as e:
         st.error(f"Error generating calendar: {e}")
