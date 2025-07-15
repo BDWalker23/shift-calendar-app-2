@@ -3,6 +3,7 @@ from datetime import date, timedelta
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Alignment, Font
 from collections import Counter
+from openpyxl.utils import get_column_letter
 import random
 
 def get_color(name):
