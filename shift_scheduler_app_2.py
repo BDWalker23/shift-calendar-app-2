@@ -52,7 +52,7 @@ if st.button("Generate PDF"):
     try:
         from autopopulate_schedule_2 import autopopulate_schedule  # make sure this file is also in your repo
 
-        full_schedule = autopopulate_schedule(year, month, schedule)
+        full_schedule = autopopulate_schedule(year, month, shift_data)
 
         pdf = CalendarPDF()
         pdf.draw_calendar(year, month, full_schedule)
