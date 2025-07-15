@@ -1,22 +1,18 @@
-
-import calendar
-from datetime import date
 from openpyxl import Workbook
-from openpyxl.styles import PatternFill, Font, Alignment
-from openpyxl.utils import get_column_letter
-from openpyxl.worksheet.page import PageMargins
-import tempfile
-import os
+from openpyxl.styles import Alignment, Font, PatternFill
+import calendar
+from datetime import datetime
+from io import BytesIO
 
 def get_color(name):
     if name == "Brandon":
-        return "FFFF99"  # Yellow
+        return "FFFF00"  # Yellow
     elif name == "Tony":
-        return "C6EFCE"  # Green
+        return "00FF00"  # Green
     elif name == "Erik":
-        return "BDD7EE"  # Blue
+        return "00B0F0"  # Blue
     else:
-        return None
+        return "FFFFFF"  # White
 
 def generate_excel_calendar(year, month, schedule):
     wb = Workbook()
@@ -25,49 +21,40 @@ def generate_excel_calendar(year, month, schedule):
 
     days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     for col, day in enumerate(days, start=1):
-        cell = ws.cell(row=1, column=col, value=day)
-        cell.font = Font(bold=True)
-        cell.alignment = Alignment(horizontal="center", vertical="center")
-        ws.column_dimensions[get_column_letter(col)].width = 24
+        ws.cell(row=1, column=col).value = day
+        ws.cell(row=1, column=col).font = Font(bold=True)
+        ws.cell(row=1, column=col).alignment = Alignment(horizontal="center")
 
-    weeks = calendar.Calendar(firstweekday=6).monthdatescalendar(year, month)
-    row_offset = 2
-    for row, week in enumerate(weeks, start=row_offset):
-        for col, day in enumerate(week, start=1):
-            cell = ws.cell(row=row, column=col)
+    cal = calendar.Calendar(firstweekday=6)
+    weeks = cal.monthdayscalendar(year, month)
+    row_start = 2
+
+    for row_idx, week in enumerate(weeks, start=row_start):
+        for col_idx, day in enumerate(week, start=1):
+            if day == 0:
+                continue
+            cell = ws.cell(row=row_idx, column=col_idx)
+            cell_value = f"{day}"
+            date_obj = datetime(year, month, day).date()
+            if date_obj in schedule:
+                name_off = schedule[date_obj]
+                on_names = [n for n in ["Brandon", "Tony", "Erik"] if n != name_off]
+                cell_value += f"\n{name_off} OFF\n{on_names[0]} & {on_names[1]} ON"
+                fill = PatternFill(start_color=get_color(name_off), end_color=get_color(name_off), fill_type="solid")
+                cell.fill = fill
+            cell.value = cell_value
             cell.alignment = Alignment(wrap_text=True, vertical="top")
+            cell.font = Font(size=9)
 
-            if day.month == month:
-                off_name = schedule.get(day, "")
-                on_names = [n for n in ["Brandon", "Tony", "Erik"] if n != off_name]
+    # Auto-adjust column widths
+    for col in ws.columns:
+        ws.column_dimensions[col[0].column_letter].width = 18
 
-                color = get_color(off_name)
-                if color:
-                    cell.fill = PatternFill(start_color=color, end_color=color, fill_type="solid")
+    # Adjust row height
+    for row in range(2, 2 + len(weeks)):
+        ws.row_dimensions[row].height = 70
 
-                day_text = f"{day.day}"
-                if off_name:
-                    cell_value = f"{day_text}\n{off_name} OFF\n{on_names[0]} & {on_names[1]} ON"
-                else:
-                    cell_value = f"{day_text}"
-
-                # Format day number bold & underline
-                parts = cell_value.split("\n")
-                cell.value = cell_value
-                cell.font = Font(name="Calibri", size=10)
-                if parts:
-                    cell.font = Font(bold=True, underline="single")
-            else:
-                cell.value = ""
-
-    ws.page_margins = PageMargins(left=0.25, right=0.25, top=0.5, bottom=0.5)
-
-    # Save as Excel then convert to PDF
-    temp_excel = tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx")
-    wb.save(temp_excel.name)
-
-    # Export to PDF using LibreOffice or similar (example command)
-    output_pdf = temp_excel.name.replace(".xlsx", ".pdf")
-    os.system(f'libreoffice --headless --convert-to pdf "{temp_excel.name}" --outdir "{os.path.dirname(temp_excel.name)}"')
-
-    return output_pdf
+    excel_bytes = BytesIO()
+    wb.save(excel_bytes)
+    excel_bytes.seek(0)
+    return excel_bytes
