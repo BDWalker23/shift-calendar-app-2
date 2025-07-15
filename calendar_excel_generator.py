@@ -19,47 +19,40 @@ def autopopulate_schedule(year, month, existing_schedule):
     all_names = ["Brandon", "Tony", "Erik"]
     schedule = existing_schedule.copy()
 
-    off_count = Counter(schedule.values())
-    while len(set(off_count.values())) > 1:
-        most = off_count.most_common(1)[0][0]
-        for day, name in schedule.items():
-            if name == most:
-                del schedule[day]
-                off_count = Counter(schedule.values())
+    cal = calendar.Calendar(firstweekday=6)
+    all_days = [d for week in cal.monthdatescalendar(year, month) for d in week if d.month == month]
+
+    # Step 1: Find all possible Friday-Saturday-Sunday combos
+    weekends = []
+    for i in range(len(all_days) - 2):
+        if all_days[i].weekday() == 4 and all_days[i+1].weekday() == 5 and all_days[i+2].weekday() == 6:
+            weekends.append((all_days[i], all_days[i+1], all_days[i+2]))
+
+    # Step 2: Assign each person to one unused weekend
+    used_days = set(schedule.keys())
+    assigned_weekends = set()
+
+    for name in all_names:
+        for fri, sat, sun in weekends:
+            if fri not in used_days and sat not in used_days and sun not in used_days:
+                schedule[fri] = name
+                schedule[sat] = name
+                schedule[sun] = name
+                used_days.update([fri, sat, sun])
+                assigned_weekends.add((fri, sat, sun))
                 break
 
-    cal = calendar.Calendar(firstweekday=6)
-    all_days = [day for week in cal.monthdatescalendar(year, month) for day in week if day.month == month]
+    # Step 3: Fill remaining unassigned days, balancing counts
+    off_count = Counter(schedule.values())
 
     for day in all_days:
         if day not in schedule:
-            least_common = min(off_count, key=off_count.get)
-            schedule[day] = least_common
-            off_count[least_common] += 1
-
-    weekend_blocks = []
-    for i in range(len(all_days) - 2):
-        if all_days[i].weekday() == 4 and all_days[i+1].weekday() == 5 and all_days[i+2].weekday() == 6:
-            weekend_blocks.append((all_days[i], all_days[i+1], all_days[i+2]))
-
-    has_weekend_off = {name: False for name in all_names}
-    for name in all_names:
-        for fri, sat, sun in weekend_blocks:
-            if all(schedule.get(d) == name for d in [fri, sat, sun]):
-                has_weekend_off[name] = True
-                break
-
-    for name, has_off in has_weekend_off.items():
-        if not has_off:
-            for fri, sat, sun in weekend_blocks:
-                if all(schedule.get(d) != name for d in [fri, sat, sun]):
-                    schedule[fri] = name
-                    schedule[sat] = name
-                    schedule[sun] = name
-                    break
+            # Choose the name with the fewest OFF days so far
+            least = min(all_names, key=lambda n: off_count[n])
+            schedule[day] = least
+            off_count[least] += 1
 
     return schedule
-
 def generate_excel_calendar(year, month, schedule, file_path):
     wb = Workbook()
     ws = wb.active
