@@ -1,3 +1,5 @@
+import calendar
+
 def autopopulate_schedule(year, month, initial_schedule):
     all_days = [date(year, month, d) for d in range(1, calendar.monthrange(year, month)[1] + 1)]
     names = ["Brandon", "Tony", "Erik"]
