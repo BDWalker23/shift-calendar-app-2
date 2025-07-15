@@ -122,7 +122,7 @@ def generate_excel_calendar(year, month, schedule, file_path):
 
 # Set fixed column widths for Sunday to Saturday (columns 1 to 7)
     for i in range(1, 8):
-    col_letter = get_column_letter(i)
-    ws.column_dimensions[col_letter].width = 28  # Adjust as needed (25–30 is usually good)
+        col_letter = get_column_letter(i)
+        ws.column_dimensions[col_letter].width = 28  # Adjust as needed (25–30 is usually good)
         ws.column_dimensions[col_letter].width = 25  # adjust to 28 if you want even wider
     wb.save(file_path)
