@@ -15,19 +15,19 @@ def get_color(name):
 class CalendarPDF(FPDF):
     def header(self):
         self.set_font("Arial", "B", 16)
-        self.cell(0, 10, "August 2025 - Shift Calendar", ln=True, align="C")
+        self.cell(0, 10, "Shift Calendar", ln=True, align="C")
 
     def draw_calendar(self, year, month, schedule):
         self.set_font("Arial", "B", 10)
-        days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+        days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         cell_w = 40
         cell_h = 25
 
         for day in days:
-            self.cell(cell_w, 10, day, border=1, align="C", fill=True)
+            self.cell(cell_w, 10, day, border=1, align="C")
         self.ln()
 
-        cal = calendar.Calendar(firstweekday=6)
+        cal = calendar.Calendar(firstweekday=0)
         weeks = cal.monthdatescalendar(year, month)
 
         for week in weeks:
