@@ -109,8 +109,8 @@ def generate_excel_calendar(year, month, schedule, file_path):
 
 from openpyxl.utils import get_column_letter
 
-for i in range(1, 8):  # Columns A–G (7 days)
-    col_letter = get_column_letter(i)
-    ws.column_dimensions[col_letter].width = 25
+    for i in range(1, 8):  # Columns A–G (7 days)
+        col_letter = get_column_letter(i)
+        ws.column_dimensions[col_letter].width = 25
 
     wb.save(file_path)
