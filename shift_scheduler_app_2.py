@@ -1,4 +1,4 @@
-# Streamlit app code placeholder
+
 import streamlit as st
 import calendar
 from datetime import date
