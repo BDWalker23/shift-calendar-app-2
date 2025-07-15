@@ -1,6 +1,7 @@
 
 from fpdf import FPDF
 import calendar
+from datetime import date
 
 def get_color(name):
     if name == "Brandon":
@@ -13,47 +14,51 @@ def get_color(name):
         return (0, 0, 0)
 
 class CalendarPDF(FPDF):
-    def header(self):
-        self.set_font("Arial", "B", 16)
-        self.cell(0, 10, "Shift Calendar", ln=True, align="C")
-        self.ln(5)
+    def __init__(self, orientation="L", unit="mm", format="A4"):
+        super().__init__(orientation, unit, format)
+        self.set_auto_page_break(auto=True, margin=10)
 
     def draw_calendar(self, year, month, schedule):
+        self.add_page()
+        self.set_font("Arial", "B", 16)
+        title = f"{calendar.month_name[month]} {year} Shift Schedule (Color-Coded Off Days)"
+        self.set_text_color(0)
+        self.cell(0, 10, title, ln=True, align="C")
+        self.ln(5)
+
+        # Weekday headers
         self.set_font("Arial", "B", 10)
-        self.set_fill_color(220, 220, 220)
-
-        days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-        cell_w = 40
-        cell_h = 20
-
-        # Draw weekday headers
+        cell_width = 40
+        cell_height = 20
+        days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
         for day in days:
-            self.cell(cell_w, 10, day, border=1, align="C", fill=True)
+            self.cell(cell_width, 10, day, border=1, align="C")
         self.ln()
 
-        cal = calendar.Calendar(firstweekday=0)
+        cal = calendar.Calendar(firstweekday=6)  # Start weeks on Sunday
         weeks = cal.monthdatescalendar(year, month)
 
         for week in weeks:
-            for date in week:
+            for day in week:
                 x = self.get_x()
                 y = self.get_y()
-                self.rect(x, y, cell_w, cell_h)
-                if date.month == month:
-                    name = schedule.get(date, "")
-                    r, g, b = get_color(name)
-                    self.set_xy(x + 2, y + 2)
-                    self.set_font("Arial", "", 9)
+                self.rect(x, y, cell_width, cell_height)
+                if day.month == month:
+                    self.set_xy(x + 1, y + 1)
+                    self.set_font("Arial", "B", 9)
                     self.set_text_color(0)
-                    self.cell(cell_w - 4, 5, str(date.day), ln=1)
-                    if name:
-                        self.set_xy(x + 2, y + 8)
+                    self.cell(cell_width - 2, 5, str(day.day), ln=1)
+
+                    if day in schedule:
+                        name = schedule[day]
+                        others = [n for n in ["Brandon", "Tony", "Erik"] if n != name]
+                        r, g, b = get_color(name)
+                        self.set_font("Arial", "", 9)
+                        self.set_xy(x + 1, y + 7)
                         self.set_text_color(r, g, b)
-                        self.multi_cell(cell_w - 4, 5, name)
-                else:
-                    self.set_xy(x + 2, y + 2)
-                    self.set_font("Arial", "", 9)
-                    self.set_text_color(150)
-                    self.cell(cell_w - 4, 5, str(date.day), ln=1)
-                self.set_xy(x + cell_w, y)
+                        self.cell(cell_width - 2, 5, f"{name} OFF", ln=1)
+                        self.set_xy(x + 1, y + 13)
+                        self.set_text_color(0)
+                        self.cell(cell_width - 2, 5, f"{others[0]} & {others[1]} ON", ln=1)
+                self.set_xy(x + cell_width, y)
             self.ln()
