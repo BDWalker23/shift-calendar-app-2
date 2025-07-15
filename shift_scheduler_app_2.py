@@ -9,8 +9,8 @@ st.title("Shift Calendar App v2")
 
 # Allow user to pick any month/year from 2025 to 2030
 st.sidebar.header("Calendar Settings")
-year = st.sidebar.selectbox("Select Year", list(range(2025, 2031)), index=0)
-month = st.sidebar.selectbox("Select Month", list(calendar.month_name)[1:], index=datetime.now().month - 1)
+year = int(st.selectbox("Select Year", options=years))
+month = int(months.index(st.selectbox("Select Month", options=months)) + 1)
 
 names = ["Brandon", "Tony", "Erik"]
 
