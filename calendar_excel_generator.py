@@ -20,10 +20,11 @@ def autopopulate_schedule(year, month, existing_schedule):
     schedule = existing_schedule.copy()
     cal = calendar.Calendar(firstweekday=6)
 
+    # Step 1: Identify all valid dates in the month
     all_days = [day for week in cal.monthdatescalendar(year, month) for day in week if day.month == month]
     locked_days = set(schedule.keys())
 
-    # Step 1: Assign one Fri–Sat–Sun block per person
+    # Step 2: Assign one full weekend (Fri–Sat–Sun) to each person, only if not already locked
     weekends = []
     for week in cal.monthdatescalendar(year, month):
         fri, sat, sun = week[calendar.FRIDAY], week[calendar.SATURDAY], week[calendar.SUNDAY]
@@ -37,18 +38,18 @@ def autopopulate_schedule(year, month, existing_schedule):
                 schedule[fri] = name
                 schedule[sat] = name
                 schedule[sun] = name
-                assigned.add(name)
                 locked_days.update([fri, sat, sun])
+                assigned.add(name)
                 break
 
-    # Step 2: Fill in remaining days fairly (±1 off day)
-    off_count = Counter(schedule.values())
+    # Step 3: Evenly distribute remaining unassigned OFF days (±1)
     unfilled = [d for d in all_days if d not in schedule]
+    off_count = Counter(schedule.values())
 
     base = len(all_days) // len(all_names)
-    remainder = len(all_days) % len(all_names)
+    extras = len(all_days) % len(all_names)
     target = {name: base for name in all_names}
-    for i in range(remainder):
+    for i in range(extras):
         target[all_names[i]] += 1
 
     random.shuffle(unfilled)
