@@ -1,10 +1,9 @@
 import calendar
-from datetime import date
+from datetime import date, timedelta
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Alignment, Font
 from collections import Counter
 import random
-from datetime import timedelta
 
 def get_color(name):
     if name == "Brandon":
@@ -14,16 +13,14 @@ def get_color(name):
     elif name == "Erik":
         return "99CCFF"  # Blue
     else:
-        return "FFFFFF"  # Default white
+        return "FFFFFF"
 
 def autopopulate_schedule(year, month, existing_schedule):
     all_names = ["Brandon", "Tony", "Erik"]
     schedule = existing_schedule.copy()
-
-    # Count current off days
     off_count = Counter(schedule.values())
+
     while len(set(off_count.values())) > 1:
-        # Normalize off counts to +/- 1
         most = off_count.most_common(1)[0][0]
         for day, name in schedule.items():
             if name == most:
@@ -31,18 +28,15 @@ def autopopulate_schedule(year, month, existing_schedule):
                 off_count = Counter(schedule.values())
                 break
 
-    # Get all dates in the month
     cal = calendar.Calendar(firstweekday=6)
     all_days = [day for week in cal.monthdatescalendar(year, month) for day in week if day.month == month]
 
-    # Fill in blanks
     for day in all_days:
         if day not in schedule:
             least_common = min(off_count, key=off_count.get)
             schedule[day] = least_common
             off_count[least_common] += 1
 
-    # Ensure at least one full weekend off
     weekend_blocks = []
     for i in range(len(all_days) - 2):
         if all_days[i].weekday() == 4 and all_days[i+1].weekday() == 5 and all_days[i+2].weekday() == 6:
@@ -71,8 +65,7 @@ def generate_excel_calendar(year, month, schedule, file_path):
     ws = wb.active
     ws.title = f"{calendar.month_name[month]} {year} Shift Calendar – N969PW"
 
-    # Add Month and Year title
-    title = f"{calendar.month_name[month]} {year} Shift Calendar"
+    title = f"{calendar.month_name[month]} {year} Shift Calendar – N969PW"
     ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=7)
     title_cell = ws.cell(row=1, column=1)
     title_cell.value = title
@@ -81,8 +74,6 @@ def generate_excel_calendar(year, month, schedule, file_path):
 
     header_row = 2
     row_start = header_row + 1
-
-    # Headers
     days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     for col, day in enumerate(days, start=1):
         ws.cell(row=header_row, column=col).value = day
@@ -109,20 +100,14 @@ def generate_excel_calendar(year, month, schedule, file_path):
                     fill_color = get_color(off_name)
                     cell.fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
 
-                # Make day number bold and underlined
-                if cell_value:
-                    cell.font = Font(bold=False)  # base font
-                    cell_value_lines = cell_value.split("\n")
-                    if cell_value_lines:
-                        day_str = cell_value_lines[0]
-                        cell.value = f"{day_str}\n" + "\n".join(cell_value_lines[1:])
-                        
-    # Set column widths for better layout
- from openpyxl.utils import get_column_letter
+                cell.font = Font(bold=False)
+                cell_value_lines = cell_value.split("\n")
+                if cell_value_lines:
+                    day_str = cell_value_lines[0]
+                    cell.value = f"{day_str}\n" + "\n".join(cell_value_lines[1:])
 
-# Set fixed column widths for Sunday to Saturday (columns 1 to 7)
-    for i in range(1, 8):
-        col_letter = get_column_letter(i)
-        ws.column_dimensions[col_letter].width = 28  # Adjust as needed (25–30 is usually good)
-        ws.column_dimensions[col_letter].width = 25  # adjust to 28 if you want even wider
+    for col in ws.columns:
+        col_letter = col[0].column_letter if not isinstance(col[0], type(ws.cell(row=1, column=1))) else ws.cell(row=2, column=col[0].column).column_letter
+        ws.column_dimensions[col_letter].width = 25
+
     wb.save(file_path)
